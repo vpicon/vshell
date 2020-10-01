@@ -7,8 +7,8 @@ HEADERS := $(shell echo src/*.h)
 OBJECTS := $(SOURCES:.c=.o)
 
 TEST_TARGET := test
-TEST_SOURCES := $(shell echo tests/*.c) $(SOURCES)
-TEST_HEADERS := $(shell echo tests/*.h) $(HEADERS)
+TEST_SOURCES := $(shell echo tests/*.c) 
+TEST_HEADERS := $(shell echo tests/*.h) 
 TEST_OBJECTS := $(TEST_SOURCES:.c=.o) 
 
 all: $(TARGET)
@@ -16,10 +16,9 @@ all: $(TARGET)
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
 
-test: $(TEST_TARGET)
 
-$(TEST_TARGET): $(TEST_OBJECTS)
-	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_OBJECTS)
+$(TEST_TARGET): $(TEST_OBJECTS) $(filter-out src/vshell.o,$(OBJECTS))
+	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_OBJECTS) $(filter-out src/vshell.o,$(OBJECTS))
 
 clean:
 	-rm $(OBJECTS) $(TEST_OBJECTS)
