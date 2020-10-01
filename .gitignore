@@ -1,0 +1,4 @@
+# Exclude binaries and builds
+*.o
+test
+vshell
