@@ -15,6 +15,7 @@
  */
 struct shell_config {
     char prompt[MAX_PROMPT_LEN];  /* buffer containing shell prompt */
+    char input[MAX_INPUT_LEN];   /* buffer containing each command input */
 };
 
 struct shell_config SHELL;
