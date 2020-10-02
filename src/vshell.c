@@ -3,7 +3,7 @@
 /**
  * Reads input of the command line and stores the result in
  * the shell command buffer for input. If the input is too long
- * to be stored in the SHELL buffer, returns -1; otherwise
+ * to be stored in the SHELL buffer, returns 1; otherwise
  * returns 0.
  */
 int read_input() {
@@ -18,7 +18,7 @@ int read_input() {
          * characters, thus the read line overflows our
          * input buffer
          */
-        return_status = -1;
+        return_status = 1;
     } else {
         strncpy(SHELL.input, line, MAX_INPUT_LEN);
     }
@@ -26,7 +26,6 @@ int read_input() {
     free(line);
     return return_status;
 }
-
 
 
 /**
@@ -42,14 +41,36 @@ void init_shell() {
 }
 
 
-
-
 int main() {
     init_shell();
+
+    /* Loop reading and executing commands */
     while (STATUS.run_status) {
+        /* Print shell prompt */
         printf("%s", SHELL.prompt);
         fflush(stdout);
-        read_input();
+
+        /* Read input and execute them */
+        int input_status = read_input();
+        if (input_status != 0) {      /* Error on input */
+            if (input_status == 1) {  /* Input too long */
+                fprintf(stderr, "Input too long, no more than %d "
+                                "characters accepted.\n", MAX_INPUT_LEN);
+            }
+        } else {
+            pid_t pid;
+            if ((pid = fork()) == -1) {  /* Fork failed */
+                /* Mark error and go to read the next command */
+                perror("fork");
+                continue;
+            }
+
+            if (pid == 0) {  /* Child process */
+                return 0;
+            }
+            /* In the parent (shell) process */
+            wait(NULL);
+        }
     }
     return 0;
 }
