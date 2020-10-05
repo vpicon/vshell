@@ -72,16 +72,20 @@ int main() {
             if (STATUS.input == 1) {  /* Input too long */
                 fprintf(stderr, "Input too long, no more than %d "
                                 "characters accepted.\n", MAX_INPUT_LEN);
+            } else if (STATUS.input == 2) {
+                fprintf(stderr, "Input contains non-valid characters.\n");
             }
+            /* No need to free any memmory in command, since
+             * parse_tokens() was never called in these cases.
+             */
             continue; /* Go to read next input */
         }
 
         /* Execute commands from parsed input */
         pid_t pid;
         if ((pid = fork()) == -1) {  /* Fork failed */
-            /* Mark error and go to read the next command */
             perror("fork");
-            continue; /* Go to read next input */
+            exit(1);
         }
 
         if (pid == 0) {  /* Child process */
@@ -89,6 +93,7 @@ int main() {
         }
         /* In the parent (shell) process */
         wait(NULL);
+        clear_tokens(command);
     }
     return 0;
 }
