@@ -4,10 +4,8 @@
 /**
  * Parse the contents of the nulterminated input
  * char array pointed by input pointer
- * and store the command in SHELL.command.
- * If the input has invalid characters or contains an
- * invalid command, the function returns 2. Otherwise,
- * return 0.
+ * and return a pointer to an array of pointers of strings.
+ * Suppose the input string has 0 < length <= MAX_INPUT_LEN.
  */
 char **parse_tokens(char *input) {
     char **command = NULL;  /* NULL terminated array of strings
