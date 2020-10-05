@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -Werror -pedantic -I"lib" -I"src"
+CFLAGS := -Wall -Wextra -Werror -pedantic -I"lib" -I"src" -g
 
 TARGET := vshell
 SOURCES := $(shell echo src/*.c)

@@ -12,7 +12,17 @@ char **read_input() {
     /* Read each line of input and store it in pointer */
     char *line = NULL;
     size_t n = 0;
-    getline(&line, &n, stdin);
+    if (getline(&line, &n, stdin) == -1) {
+        if (feof(stdin)) {
+            STATUS.run = 1;
+            free(line);
+            return NULL;
+        }
+        else {
+            perror("getline");
+            exit(1);
+        }
+    }
 
     int i = 0;
     while (i <= MAX_INPUT_LEN && line[i] != '\0') {
@@ -68,6 +78,9 @@ int main() {
 
         /* Read input and skip to next command if there were any errors */
         char **command = read_input();
+        if (command == NULL) {
+            continue;
+        }
         if (STATUS.input != 0) {      /* Error on input */
             if (STATUS.input == 1) {  /* Input too long */
                 fprintf(stderr, "Input too long, no more than %d "
@@ -89,6 +102,7 @@ int main() {
         }
         /* In the parent (shell) process */
         wait(NULL);
+        clear_tokens(command);
     }
     return 0;
 }
