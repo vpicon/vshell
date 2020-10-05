@@ -1,30 +1,45 @@
 #include "vshell.h"
 
+
 /**
  * Reads input of the command line and stores the result in
  * the shell command buffer for input. If the input is too long
  * to be stored in the SHELL buffer, returns 1; otherwise
  * returns 0.
  */
-int read_input() {
-    int return_status = 0;
+char **read_input() {
+    int status = 0;
     /* Read each line of input and store it in pointer */
     char *line = NULL;
     size_t n = 0;
     getline(&line, &n, stdin);
 
-    if (strnlen(line, MAX_INPUT_LEN) == MAX_INPUT_LEN) {
-        /* We did not find a '\0' in the first MAX_INPUT_LEN
-         * characters, thus the read line overflows our
-         * input buffer
-         */
-        return_status = 1;
-    } else {
-        strncpy(SHELL.input, line, MAX_INPUT_LEN);
+    int i = 0;
+    while (i <= MAX_INPUT_LEN && line[i] != '\0') {
+        if (!(VALID_CHAR(line[i]) || line[i] == '\n')) {
+            status = 2;
+            break;
+        }
+        i++;
     }
 
+    char **command = NULL;
+    if(status != 2) {
+        if (i > MAX_INPUT_LEN) { /* line is longer than SHELL input buffer */
+            status = 1;
+        } else {                      /* We have line[i] == '\0' */
+            if (line[i - 1] == '\n')  /* line may have ending newline */
+                line[i - 1] = '\0';
+        }
+
+        if (status != 1) {
+            command = parse_tokens(line);
+        }
+    }
+
+    STATUS.input = status;
     free(line);
-    return return_status;
+    return command;
 }
 
 
@@ -34,10 +49,11 @@ int read_input() {
  */
 void init_shell() {
     /* Initialize STATUS */
-    STATUS.run_status = 1;
+    STATUS.run = 0;
+    STATUS.input = 0;
 
     /* Initialize SHELL configuration */
-    strncpy(SHELL.prompt, "vsh$ ", MAX_PROMPT_LEN);
+    SHELL.prompt = "vsh$ ";
 }
 
 
@@ -45,32 +61,34 @@ int main() {
     init_shell();
 
     /* Loop reading and executing commands */
-    while (STATUS.run_status) {
+    while (STATUS.run == 0) {
         /* Print shell prompt */
         printf("%s", SHELL.prompt);
         fflush(stdout);
 
-        /* Read input and execute them */
-        int input_status = read_input();
-        if (input_status != 0) {      /* Error on input */
-            if (input_status == 1) {  /* Input too long */
+        /* Read input and skip to next command if there were any errors */
+        char **command = read_input();
+        if (STATUS.input != 0) {      /* Error on input */
+            if (STATUS.input == 1) {  /* Input too long */
                 fprintf(stderr, "Input too long, no more than %d "
                                 "characters accepted.\n", MAX_INPUT_LEN);
             }
-        } else {
-            pid_t pid;
-            if ((pid = fork()) == -1) {  /* Fork failed */
-                /* Mark error and go to read the next command */
-                perror("fork");
-                continue;
-            }
-
-            if (pid == 0) {  /* Child process */
-                return 0;
-            }
-            /* In the parent (shell) process */
-            wait(NULL);
+            continue; /* Go to read next input */
         }
+
+        /* Execute commands from parsed input */
+        pid_t pid;
+        if ((pid = fork()) == -1) {  /* Fork failed */
+            /* Mark error and go to read the next command */
+            perror("fork");
+            continue; /* Go to read next input */
+        }
+
+        if (pid == 0) {  /* Child process */
+            return 0;
+        }
+        /* In the parent (shell) process */
+        wait(NULL);
     }
     return 0;
 }

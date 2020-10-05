@@ -12,11 +12,12 @@
 #include <unistd.h>
 
 #include "defs.h"
+#include "parse.h"
 
 
 /*** DECLARATIONS  ***/
 
-int read_input();
+char **read_input();
 void init_shell();
 
 
