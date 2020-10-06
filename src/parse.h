@@ -10,7 +10,9 @@
 
 
 char **parse_tokens(char *input);
+char *get_token(char **str);
 void clear_tokens(char **command);
+
 
 
 #endif  // _VSHELL_PARSE_H

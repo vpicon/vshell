@@ -1,6 +1,17 @@
 #include "parse.h"
 
 
+/* command_type *parse_command(char *input) { */
+    /* command_type *command = malloc(sizeof(command_type)); */
+    /* if (command == NULL) { [> malloc failed <] */
+        /* perror("malloc"); */
+        /* exit(1); */
+    /* } */
+
+    /* return command; */
+/* } */
+
+
 /**
  * Parse the contents of the nulterminated input
  * char array pointed by input pointer
@@ -11,40 +22,13 @@ char **parse_tokens(char *input) {
     char **command = NULL;  /* NULL terminated array of strings
                                where each string is a parsed token
                                from the given input. */
-
     size_t n_tokens = 0;  /* Number of tokens parsed */
-    int input_len = (int) strnlen(input, MAX_INPUT_LEN + 1);
 
-    int i_begin = 0;      /* Start position parsed tokens in input */
-    size_t token_len = 0; /* Length of the token currently being read */
-
-    for (int i = 0; i <= input_len; i++) {
-        if (input[i] == ' ' || input[i] == '\0') { /* Token delimiters */
-            if (token_len > 0) {  /* Found end of token */
-                n_tokens++;
-                command = realloc(command,
-                                  n_tokens * sizeof(char*));
-                if (command == NULL) { /* realloc failed */
-                    perror("realloc");
-                    exit(1);
-                }
-                /* allocate token_len+1 bytes for the token chars
-                 * and strndup will add '\0' to the ending byte.
-                 */
-                char *token = strndup(&input[i_begin], token_len);
-                if (token == NULL) { /* strndup error */
-                    perror("strndup");
-                    exit(1);
-                }
-                command[n_tokens - 1] = token; /* add new token to array */
-            }
-            token_len = 0;
-        } else {  /* We are inside a token */
-            if (token_len == 0) { /* New token found */
-                i_begin = i;
-            }
-            token_len++;
-        }
+    char *token;
+    while ((token = get_token(&input)) != NULL) {
+        n_tokens++;
+        command = realloc(command, n_tokens * sizeof(char*));
+        command[n_tokens - 1] = token;
     }
 
     /* Add NULL to the end */
@@ -57,6 +41,45 @@ char **parse_tokens(char *input) {
 
     return command;
 }
+
+
+/**
+ * Given a pointer to a non empty null terminated array of characters,
+ * returns a pointer to an allocated string (nul terminated)
+ * of the first encountered token in *str (a token is any sequence
+ * of non_space characters), and leaves the str pointer pointing
+ * to the first token delimiter (whitespace) encountered.
+ * If there is no such token, returns NULL.
+ * When the last token is returned, the given pointer points to the
+ * '\0' character in *str.
+ */
+char *get_token(char **str) {
+    size_t token_len = 0; /* Size of token to be parsed */
+
+    while (**str == ' ')  /* Go to first non space character */
+        (*str)++;
+
+    char* token_ptr = *str; /* Set a pointer to the first token char */
+    while(**str != '\0') {
+        if (**str == ' ') { /* Reached end of token */
+            break;
+        }
+        (*str)++;
+        token_len++;
+    }
+
+    if (token_len == 0) { /* No token was found */
+        return NULL;
+    }
+
+    char *allocated_str = strndup(token_ptr, token_len);
+    if (allocated_str == NULL) { /* strndup failed */
+        perror("strndup");
+        exit(1);
+    }
+    return allocated_str;
+}
+
 
 
 /**
@@ -73,7 +96,6 @@ void clear_tokens(char **command) {
 
 
 
-
 #define DEBUG 0
 #if DEBUG
 
@@ -83,13 +105,11 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    char **command = parse_tokens(argv[1]);
+    char *input = strdup(argv[1]);
 
-    for (char **str_p = command; *str_p != NULL; str_p++) {
-        printf("%s ", *str_p);
-    }
-    printf("\n");
-    clear_tokens(command);
+    char *token;
+    while ((token = get_token(&input)) != NULL)
+        printf("%s\n", token);
 
     return 0;
 }
