@@ -8,7 +8,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
- 
 #include <unistd.h>
 
 #include "defs.h"
@@ -17,6 +16,7 @@
 
 /*** DECLARATIONS  ***/
 
+int special_command();
 char **read_input();
 void init_shell();
 

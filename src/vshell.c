@@ -1,5 +1,24 @@
 #include "vshell.h"
 
+/**
+ * Returns if the character array pointer by
+ * command_name is special for the terminal:
+ * exit command or history feature.
+ *
+ * On exit command returns 1, on history feature
+ * returns 2. Otherwise return 0.
+ *
+ * Assume command_name is a null terminated
+ * non empty character array.
+ */
+int special_command(char *const command_name) {
+    if (strcmp(command_name, "exit") == 0) {
+        return 1;
+    } else if (command_name[0] == '!') {
+        return 2;
+    }
+    return 0;
+}
 
 /**
  * Reads input of the command line and stores the result in
@@ -94,6 +113,19 @@ int main() {
             continue; /* Go to read next input */
         }
 
+        int special_command_flag = special_command(command[0]);
+        if (special_command_flag != 0) {
+            if (special_command_flag == 1) {
+                /* Exit in next iteration */
+                STATUS.run = 1;
+                clear_tokens(command);
+                continue;
+            } else { // special_command_flag == 2
+                // history;
+            }
+        }
+
+
         /* Execute commands from parsed input */
         pid_t pid;
         if ((pid = fork()) == -1) {  /* Fork failed */
@@ -102,7 +134,10 @@ int main() {
         }
 
         if (pid == 0) {  /* Child process */
-            return 0;
+            if (execvp(command[0], command) == -1) {
+                perror("execv");
+                exit(1);
+            }
         }
         /* In the parent (shell) process */
         wait(NULL);
