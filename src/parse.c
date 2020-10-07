@@ -1,15 +1,54 @@
 #include "parse.h"
 
 
-/* command_type *parse_command(char *input) { */
-    /* command_type *command = malloc(sizeof(command_type)); */
-    /* if (command == NULL) { [> malloc failed <] */
-        /* perror("malloc"); */
-        /* exit(1); */
-    /* } */
+command_type *parse_command(char *input) {
+    command_type *command = malloc(sizeof(command_type));
+    if (command == NULL) { /* malloc failed */
+        perror("malloc");
+        exit(1);
+    }
+    /* Initialize io array as stdin/stdout by default */
+    command->io[0] = stdin;
+    command->io[1] = stdout;
 
-    /* return command; */
-/* } */
+    size_t n_tokens = 0; /* Number of tokens that will
+                          * be allocated for the command_type struct;
+                          * that is: </> and its following filenames
+                          * will not add up to this count.
+                          */
+    char *token;
+    while ((token = get_token(&input)) != NULL) {
+        if (strcmp(token, "<") == 0 || strcmp(token, ">") == 0) {
+            char *filename = get_token(&input);
+            if (filename == NULL) {
+                STATUS.file_io = 3;
+                STATUS.msg = "Missing filename after </> redirection symbol.";
+            }
+            enum io_type t = (strcmp(token, "<") == 0) ? IN : OUT;
+            set_command_io(command, filename, t);
+        } else {
+            n_tokens++;
+            command->tokens = realloc(command->tokens,
+                                      n_tokens * sizeof(char*));
+            if (command->tokens == NULL) { /* realloc failed */
+                perror("realloc");
+                exit(1);
+            }
+            command->tokens[n_tokens - 1] = token;
+        }
+    }
+
+    /* Add NULL to the end of command->tokens array */
+    command->tokens = realloc(command->tokens,
+                              (n_tokens + 1) * sizeof(char*));
+    if (command->tokens == NULL) { /* realloc failed */
+        perror("realloc");
+        exit(1);
+    }
+    command->tokens[n_tokens] = NULL;
+
+    return command;
+}
 
 
 /**
@@ -52,6 +91,8 @@ char **parse_tokens(char *input) {
  * If there is no such token, returns NULL.
  * When the last token is returned, the given pointer points to the
  * '\0' character in *str.
+ * Memmory allocated by the function must be freed calling
+ * free().
  */
 char *get_token(char **str) {
     size_t token_len = 0; /* Size of token to be parsed */
@@ -96,7 +137,7 @@ void clear_tokens(char **command) {
 
 
 
-#define DEBUG 0
+#define DEBUG 1
 #if DEBUG
 
 int main(int argc, char *argv[]) {
@@ -107,9 +148,12 @@ int main(int argc, char *argv[]) {
 
     char *input = strdup(argv[1]);
 
-    char *token;
-    while ((token = get_token(&input)) != NULL)
-        printf("%s\n", token);
+    command_type *command = parse_command(input);
+    char **tokens = command->tokens;
+    while(*tokens != NULL) {
+        printf("%s\n", *tokens);
+        tokens++;
+    }
 
     return 0;
 }

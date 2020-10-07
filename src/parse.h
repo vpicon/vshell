@@ -7,6 +7,7 @@
 #include <string.h>
 
 #include "defs.h"
+#include "io.h"
 
 
 char **parse_tokens(char *input);
