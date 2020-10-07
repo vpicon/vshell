@@ -21,8 +21,23 @@ command_type *parse_command(char *input) {
         if (strcmp(token, "<") == 0 || strcmp(token, ">") == 0) {
             char *filename = get_token(&input);
             if (filename == NULL) {
+                /* Report syntax error in the status struct */
                 STATUS.file_io = 3;
                 STATUS.msg = "Missing filename after </> redirection symbol.";
+                /* Clean memory and return.
+                 *
+                 * We need to add NULL to the end of command->tokens
+                 * array to call clean_tokens.
+                 */
+                command->tokens = realloc(command->tokens,
+                                          (n_tokens + 1) * sizeof(char*));
+                if (command->tokens == NULL) { /* realloc failed */
+                    perror("realloc");
+                    exit(1);
+                }
+                command->tokens[n_tokens] = NULL;
+                clear_tokens(command->tokens);
+                return NULL;
             }
             enum io_type t = (strcmp(token, "<") == 0) ? IN : OUT;
             set_command_io(command, filename, t);
@@ -129,15 +144,17 @@ char *get_token(char **str) {
  * by such routine.
  */
 void clear_tokens(char **command) {
+    /* Free all the strings in the array */
     for (char **str_ptr = command; *str_ptr != NULL; str_ptr++) {
         free(*str_ptr);
     }
+    /* Free allocated memory to hold the array of pointers */
     free(command);
 }
 
 
 
-#define DEBUG 1
+#define DEBUG 0
 #if DEBUG
 
 int main(int argc, char *argv[]) {
