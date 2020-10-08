@@ -149,7 +149,8 @@ int main() {
             if (special_command_flag == 1) {
                 /* Exit in next iteration */
                 STATUS.run = 1;
-                clear_command(command);
+                clear_command_tokens(command);
+                clear_command_io(command);
                 continue;
             } else { // special_command_flag == 2
                 // history;
@@ -169,8 +170,9 @@ int main() {
         }
         /* In the parent (shell) process */
         wait(NULL);
-        clear_command(command);
+        clear_command_tokens(command);
         clear_command_io(command);
     }
+
     return 0;
 }

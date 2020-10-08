@@ -1,5 +1,7 @@
 #include "parse.h"
 
+
+
 /**
  * Given an input string with all valid characters
  * and with length 0 < input <= MAX_INPUT_LEN
@@ -19,17 +21,35 @@ command_type *parse_command(char *input) {
         perror("malloc");
         exit(1);
     }
-    /* Initialize command struct */
-    command->tokens = NULL;
-    init_command_io(command); /* io array as stdin/stdout by default */
+    init_command(command);
 
-    int n_tokens = 0; /* Number of tokens that will
-                          * be allocated for the command_type struct;
-                          * that is: </> and its following filenames
-                          * will not add up to this count.
-                          */
+    /* Keep track of the first encountered command (in a possible
+     * long list of piped commands), which will be returned by the
+     * function.
+     */
+    command_type *first_command = command;
+
     char *token;
     while ((token = get_token(&input)) != NULL) {
+        if (strcmp(token, "|") == 0) {
+            /* Add NULL to the end of command->tokens array */
+            add_command_token(command, NULL);
+
+            /* Create a new command struct */
+            command_type *new_command = malloc(sizeof(command_type));
+            if (new_command == NULL) { /* malloc failed */
+                perror("malloc");
+                exit(1);
+            }
+            init_command(new_command);
+
+            /* Point old command to new */
+            command->next_command = new_command;
+            command = new_command;
+
+            /* Go to read next token */
+            continue;
+        }
         if (strcmp(token, "<") == 0 || strcmp(token, ">") == 0) {
             char *filename = get_token(&input);
             if (filename == NULL) {
@@ -41,83 +61,22 @@ command_type *parse_command(char *input) {
                  * We need to add NULL to the end of command->tokens
                  * array to call clean_tokens.
                  */
-                command->tokens = realloc(command->tokens,
-                                          (n_tokens + 1) * sizeof(char*));
-                if (command->tokens == NULL) { /* realloc failed */
-                    perror("realloc");
-                    exit(1);
-                }
-                command->tokens[n_tokens] = NULL;
-                clear_tokens(command->tokens);
+                add_command_token(command, NULL);
+                clear_command_tokens(command);
                 clear_command_io(command);
                 return NULL;
             }
             enum io_type t = (strcmp(token, "<") == 0) ? IN : OUT;
             set_command_io(command, filename, t);
         } else {
-            n_tokens++;
-            command->tokens = realloc(command->tokens,
-                                      n_tokens * sizeof(char*));
-            if (command->tokens == NULL) { /* realloc failed */
-                perror("realloc");
-                exit(1);
-            }
-            command->tokens[n_tokens - 1] = token;
+            add_command_token(command, token);
         }
     }
 
     /* Add NULL to the end of command->tokens array */
-    command->tokens = realloc(command->tokens,
-                              (n_tokens + 1) * sizeof(char*));
-    if (command->tokens == NULL) { /* realloc failed */
-        perror("realloc");
-        exit(1);
-    }
-    command->tokens[n_tokens] = NULL;
+    add_command_token(command, NULL);
 
-    return command;
-}
-
-
-/**
- * Clears all memmory allocated during the execution
- * of parse_command, being command the pointer returned
- * by such routine.
- */
-void clear_command(command_type *command) {
-    clear_tokens(command->tokens);
-}
-
-
-
-/**
- * Parse the contents of the nulterminated input
- * char array pointed by input pointer
- * and return a pointer to an array of pointers of strings.
- * Suppose the input string has 0 < length <= MAX_INPUT_LEN.
- */
-char **parse_tokens(char *input) {
-    char **command = NULL;  /* NULL terminated array of strings
-                               where each string is a parsed token
-                               from the given input. */
-    size_t n_tokens = 0;  /* Number of tokens parsed */
-
-    char *token;
-    while ((token = get_token(&input)) != NULL) {
-        n_tokens++;
-        command = realloc(command, n_tokens * sizeof(char*));
-        command[n_tokens - 1] = token;
-    }
-
-    /* Add NULL to the end */
-    command = realloc(command, (n_tokens + 1) * sizeof(char*));
-    if (command == NULL) {
-        perror("realloc");
-        exit(1);
-    }
-    command[n_tokens] = NULL;
-
-    return command;
+    return first_command;
 }
 
 
@@ -160,6 +119,42 @@ char *get_token(char **str) {
     return allocated_str;
 }
 
+
+
+/**
+ * Routine to set initialization values to a given
+ * command_type struct.
+ */
+void init_command(command_type *command) {
+    command->tokens = NULL;
+    command->n_tokens = 0;
+    init_command_io(command); /* io array as stdin/stdout by default */
+    command->next_command = NULL;
+}
+
+
+void add_command_token(command_type *command, char* token) {
+    command->tokens = realloc(command->tokens,
+                              (command->n_tokens + 1) * sizeof(char*));
+    if (command->tokens == NULL) { /* realloc failed */
+        perror("realloc");
+        exit(1);
+    }
+    command->tokens[command->n_tokens] = token;
+
+    if (token != NULL)
+        command->n_tokens++;
+}
+
+
+/**
+ * Clears all memmory allocated during the execution
+ * of parse_command, being command the pointer returned
+ * by such routine.
+ */
+void clear_command_tokens(command_type *command) {
+    clear_tokens(command->tokens);
+}
 
 
 /**

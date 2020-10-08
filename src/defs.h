@@ -62,6 +62,7 @@ struct shell_status STATUS;
 
 typedef struct command_type {
     char **tokens;  /* null-terminated array of pointers to strings */
+    int n_tokens;   /* number of (non NULL) tokens in the tokens array */
     int io[2];      /* array of file descriptors represents input and 
                      * output streams of the command */
     struct command_type *next_command;  /* Pointer to the next command in 
