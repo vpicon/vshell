@@ -6,6 +6,7 @@ void init_command_io(command_type *command) {
     command->io[1] = STDOUT_FILENO;
 }
 
+
 void set_command_io(command_type *command,
                     char *const filename, enum io_type t) {
     int fd; /* opened file descriptor */
@@ -24,4 +25,15 @@ void set_command_io(command_type *command,
         return;
     }
     command->io[t] = fd;
+}
+
+
+void clear_command_io(command_type *command) {
+    int fd_in = command->io[IN];
+    if (fd_in != STDIN_FILENO)
+        close(fd_in);
+
+    int fd_out = command->io[OUT];
+    if (fd_out != STDOUT_FILENO)
+        close(fd_out);
 }

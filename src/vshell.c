@@ -90,9 +90,21 @@ int special_command(command_type *command) {
     return 0;
 }
 
-
+/**
+ * Executes via a system call the given
+ * command represented in the command_type
+ * structure.
+ */
 void exec_command(command_type *command) {
     char *file = command->tokens[0];
+
+    /* Set input/output ends for the execution */
+    if (command->io[IN] != STDIN_FILENO)
+        dup2(command->io[IN], STDIN_FILENO);
+    if (command->io[OUT] != STDOUT_FILENO)
+        dup2(command->io[OUT], STDOUT_FILENO);
+    clear_command_io(command);
+
     if(execvp(file, command->tokens) == -1) { /* execvp failed */
         perror("execvp");
     }
@@ -154,6 +166,7 @@ int main() {
         /* In the parent (shell) process */
         wait(NULL);
         clear_command(command);
+        clear_command_io(command);
     }
     return 0;
 }

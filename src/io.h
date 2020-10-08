@@ -13,6 +13,7 @@
 void init_command_io(command_type *command);
 void set_command_io(command_type *command, 
                     char *const filename, enum io_type t);
+void clear_command_io(command_type *command);
 
 
 
