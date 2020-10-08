@@ -104,8 +104,14 @@ int special_command(command_type *command) {
  * command represented in the command_type
  * structure.
  */
-void exec_command(command_type *command) {
-    char *file = command->tokens[0];
+void exec_command(command_type *command, int pipe_fd[]) {
+    char *command_name = command->tokens[0];
+    close(pipe_fd[IN]);
+    if (command->next_command != NULL) {
+        command->io[OUT] = pipe_fd[OUT];
+    } else {
+        close(pipe_fd[OUT]);
+    }
 
     /* Set input/output ends for the execution */
     if (command->io[IN] != STDIN_FILENO)
@@ -114,7 +120,7 @@ void exec_command(command_type *command) {
         dup2(command->io[OUT], STDOUT_FILENO);
     clear_command_io(command);
 
-    if(execvp(file, command->tokens) == -1) { /* execvp failed */
+    if(execvp(command_name, command->tokens) == -1) { /* execvp failed */
         perror("execvp");
     }
     return;
@@ -133,9 +139,6 @@ int main() {
 
         /* Read input and skip to next command if there were any errors */
         command_type *command = read_input();
-        if (command == NULL) {
-            continue;
-        }
         if (STATUS.input != 0) {  /* Error on input */
             /* No need to free any memmory, since
              * on input error all memmory in already freed.
@@ -157,21 +160,40 @@ int main() {
             }
         }
 
+        while(command != NULL) {
+            int pipe_fd[2] = {STDIN_FILENO, STDOUT_FILENO};
+            if (pipe(pipe_fd) == -1) {
+                perror("pipe");
+                exit(1);
+            }
 
-        /* Execute commands from parsed input */
-        pid_t pid;
-        if ((pid = fork()) == -1) {  /* Fork failed */
-            perror("fork");
-            exit(1);
-        }
+            /* Execute commands from parsed input */
+            pid_t pid;
+            if ((pid = fork()) == -1) {  /* Fork failed */
+                perror("fork");
+                exit(1);
+            }
 
-        if (pid == 0) {  /* Child process */
-            exec_command(command);
+            /* In the child process */
+            if (pid == 0) {
+                exec_command(command, pipe_fd);
+            }
+
+            /* In the parent (shell) process */
+            if(wait(NULL) == -1) {
+                perror("waitpid");
+                exit(1);
+            }
+
+            clear_command_tokens(command);
+            clear_command_io(command);
+            command = command->next_command;
+            /* Set command pipe output */
+            if (command != NULL) {
+                close(pipe_fd[OUT]);
+                command->io[IN] = pipe_fd[IN];
+            }
         }
-        /* In the parent (shell) process */
-        wait(NULL);
-        clear_command_tokens(command);
-        clear_command_io(command);
     }
 
     return 0;
