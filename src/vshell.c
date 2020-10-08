@@ -100,9 +100,11 @@ int special_command(command_type *command) {
 }
 
 /**
- * Executes via a system call the given
- * command represented in the command_type
- * structure.
+ * Given a command_type struct pointer and a
+ * pipe of filedescriptors (returned by pipe(2))
+ * prepares the command input/output and
+ * executes the command via a system call to
+ * exec(2).
  */
 void exec_command(command_type *command, int pipe_fd[]) {
     char *command_name = command->tokens[0];

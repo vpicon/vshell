@@ -1,15 +1,20 @@
 #include "parse.h"
 
 
-
 /**
  * Given an input string with all valid characters
  * and with length 0 < input <= MAX_INPUT_LEN
- * returns a pointer to a command_type structure
+ * such that the string represents a compound command
+ * created by pipelining commands one next to the other,
+ * the function returns a pointer to the first node of a
+ * linked list of command_type structures
  * containing the parsed tokens in the **tokens field
- * and parses all file redirections to put the
+ * and parsing all file redirections to put the
  * appropiate FILE descriptor pointers in the
- * io field array of the command_type struct.
+ * io field array of eacho command_type node.
+ * The given list of commands allocates memmory for each
+ * pointer and for each array of tokens which must be
+ * freed via a free(2) call.
  *
  * If there was a syntax error, the STATUS flag
  * is set accordingly and a NULL pointer is returned
@@ -120,10 +125,9 @@ char *get_token(char **str) {
 }
 
 
-
 /**
- * Routine to set initialization values to a given
- * command_type struct.
+ * Given a pointer to a new freshly allocated command_type
+ * struct, initializes its struct fields accordingly.
  */
 void init_command(command_type *command) {
     command->tokens = NULL;
@@ -133,6 +137,14 @@ void init_command(command_type *command) {
 }
 
 
+/**
+ * Given a pointer to a command_type structure and a
+ * nul-terminated array of characters, allocates memmory
+ * to add the given token to the end of the tokens array field
+ * in the given command structure.
+ * The function also increments the number of tokens accounted
+ * by the command structure, if the given token is not NULL.
+ */
 void add_command_token(command_type *command, char* token) {
     command->tokens = realloc(command->tokens,
                               (command->n_tokens + 1) * sizeof(char*));
@@ -148,9 +160,8 @@ void add_command_token(command_type *command, char* token) {
 
 
 /**
- * Clears all memmory allocated during the execution
- * of parse_command, being command the pointer returned
- * by such routine.
+ * Clears all memmory allocated for the array of tokens of a given
+ * command_type structure.
  */
 void clear_command_tokens(command_type *command) {
     clear_tokens(command->tokens);
@@ -158,10 +169,10 @@ void clear_command_tokens(command_type *command) {
 
 
 /**
- * Clears all memmory allocated during the execution
- * of parse_tokens, being tokens the pointer stored in
- * the field of the command_type pointer returned
- * by such routine.
+ * Given a nullterminated array of strings (which have
+ * been allocated by malloc (or such)), frees all
+ * the allocated memmory in each of the strings and the
+ * array of those pointers.
  */
 void clear_tokens(char **tokens) {
     /* Free all the strings in the array */
@@ -178,7 +189,6 @@ void clear_tokens(char **tokens) {
 #if DEBUG
 
 int main(int argc, char *argv[]) {
-    command_type *command1 = parse_command("echo 3");
     command_type *command2 = parse_command("cat grep");
     command2->io[0] = stderr;
     printf("%p, %p\n", command1->io[0], command2->io[0]);
