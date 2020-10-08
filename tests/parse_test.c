@@ -186,6 +186,42 @@ MunitResult test_parse_command_io_redirection_syntax_error(
     return MUNIT_OK;
 }
 
+/* Parse_command: no pipeline, empty next_command */
+
+void* test_parse_command_no_pipeline_setup(
+        const MunitParameter params[] MUNIT_UNUSED,
+        void* user_data MUNIT_UNUSED) {
+    return (void *) parse_command("cat");
+}
+
+MunitResult test_parse_command_no_pipeline(
+        const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
+    command_type *command = (command_type *) fixture;
+    munit_assert_null(command->next_command);
+
+    return MUNIT_OK;
+}
+
+/* Parse_command: single pipeline two commands*/
+
+void* test_parse_command_single_pipeline_setup(
+        const MunitParameter params[] MUNIT_UNUSED,
+        void* user_data MUNIT_UNUSED) {
+    return (void *) parse_command("echo 3 | grep 3");
+}
+
+MunitResult test_parse_command_single_pipeline(
+        const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
+    command_type *first_command = (command_type *) fixture;
+    command_type *second_command = first_command->next_command;
+
+    munit_assert_string_equal("echo", first_command->tokens[0]);
+    munit_assert_string_equal("grep", second_command->tokens[0]);
+    munit_assert_null(second_command->next_command);
+
+    return MUNIT_OK;
+}
+
 
 /** Parse token Test Suite **/
 
@@ -260,6 +296,22 @@ MunitTest parse_tests[] = {
         test_parse_command_io_redirection_syntax_error,      /* test */
         test_parse_command_io_redirection_syntax_error_setup, /* setup */
         NULL, /* tear_down */
+        MUNIT_TEST_OPTION_NONE, /* options */
+        NULL /* parameters */
+    },
+    {
+        "/test_parse_command_no_pipeline", /* name */
+        test_parse_command_no_pipeline,      /* test */
+        test_parse_command_no_pipeline_setup, /* setup */
+        test_parse_command_tear_down, /* tear_down */
+        MUNIT_TEST_OPTION_NONE, /* options */
+        NULL /* parameters */
+    },
+    {
+        "/test_parse_command_single_pipeline", /* name */
+        test_parse_command_single_pipeline,      /* test */
+        test_parse_command_single_pipeline_setup, /* setup */
+        test_parse_command_tear_down, /* tear_down */
         MUNIT_TEST_OPTION_NONE, /* options */
         NULL /* parameters */
     },

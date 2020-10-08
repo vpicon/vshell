@@ -31,7 +31,7 @@ struct shell_config SHELL;
  */
 struct shell_status {
     int run;     /* flag to determine when to exit program 
-                 * if flag is:
+                  * if flag is:
                   *    0: keep running shell
                   *    1: stop execution
                   */
@@ -64,6 +64,8 @@ typedef struct command_type {
     char **tokens;  /* null-terminated array of pointers to strings */
     int io[2];      /* array of file descriptors represents input and 
                      * output streams of the command */
+    struct command_type *next_command;  /* Pointer to the next command in 
+                                    a pipe (if any), otherwise NULL */
 } command_type;
 
 
@@ -71,6 +73,5 @@ enum io_type {
     IN = 0, 
     OUT
 };
-
 
 #endif  // _VHSELL_DEFS_H
