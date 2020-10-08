@@ -34,7 +34,7 @@ command_type *parse_command(char *input) {
             char *filename = get_token(&input);
             if (filename == NULL) {
                 /* Report syntax error in the status struct */
-                STATUS.file_io = 3;
+                STATUS.input = 3;
                 STATUS.msg = "Missing filename after </> redirection symbol.";
                 /* Clean memory and return.
                  *
@@ -49,6 +49,7 @@ command_type *parse_command(char *input) {
                 }
                 command->tokens[n_tokens] = NULL;
                 clear_tokens(command->tokens);
+                clear_command_io(command);
                 return NULL;
             }
             enum io_type t = (strcmp(token, "<") == 0) ? IN : OUT;

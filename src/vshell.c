@@ -17,10 +17,19 @@ void init_shell() {
 
 
 /**
- * Reads input of the command line and stores the result in
- * the shell command buffer for input. If the input is too long
- * to be stored in the SHELL buffer, returns 1; otherwise
- * returns 0.
+ * Reads input of the command line and returns a
+ * pointer to a command_type structure containing the
+ * parsed command input.
+ * On an empty input, the function returns the NULL pointer.
+ * If en EOF character is found, the function sets the run
+ * STATUS flag to 1.
+ *
+ * ERRORS:
+ * If the input contains any invalid character, the
+ * STATUS input value is set to 2.
+ * If the input is too long, the STATUS input value is
+ * set to 1.
+ * On any error, the function returns a NULL pointer.
  */
 command_type *read_input() {
     STATUS.input = 0;
@@ -58,8 +67,8 @@ command_type *read_input() {
             if (line[i - 1] == '\n')  /* line may have ending newline */
                 line[i - 1] = '\0';
         }
-
-        if (STATUS.input != 1) {
+        /* Check any input error and no empty input */
+        if (STATUS.input != 1 && strnlen(line, MAX_INPUT_LEN + 1) != 0) {
             command = parse_command(line);
         }
     }
@@ -127,16 +136,11 @@ int main() {
         if (command == NULL) {
             continue;
         }
-        if (STATUS.input != 0) {      /* Error on input */
-            if (STATUS.input == 1) {  /* Input too long */
-                fprintf(stderr, "Input too long, no more than %d "
-                                "characters accepted.\n", MAX_INPUT_LEN);
-            } else if (STATUS.input == 2) {
-                fprintf(stderr, "Input contains non-valid characters.\n");
-            }
-            /* No need to free any memmory in command, since
-             * parse_tokens() was never called in these cases.
+        if (STATUS.input != 0) {  /* Error on input */
+            /* No need to free any memmory, since
+             * on input error all memmory in already freed.
              */
+            fprintf(stderr, "Error on input: %s\n", STATUS.msg);
             continue; /* Go to read next input */
         }
 
