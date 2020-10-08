@@ -31,7 +31,7 @@ struct shell_config SHELL;
  */
 struct shell_status {
     int run;     /* flag to determine when to exit program 
-                  * if flag is:
+                 * if flag is:
                   *    0: keep running shell
                   *    1: stop execution
                   */
@@ -57,11 +57,13 @@ struct shell_status {
 };
 struct shell_status STATUS;
 
+
 /*** TYPES ***/
 
 typedef struct command_type {
     char **tokens;  /* null-terminated array of pointers to strings */
-    FILE *io[2];     /* represents input and outpus streams of the command */
+    int io[2];      /* array of file descriptors represents input and 
+                     * output streams of the command */
 } command_type;
 
 

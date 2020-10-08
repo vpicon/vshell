@@ -13,7 +13,8 @@
 command_type *parse_command(char *input);
 char **parse_tokens(char *input);
 char *get_token(char **str);
-void clear_tokens(char **command);
+void clear_command(command_type *command);
+void clear_tokens(char **tokens);
 
 
 

@@ -17,7 +17,7 @@
 /*** DECLARATIONS  ***/
 
 int special_command();
-char **read_input();
+command_type *read_input();
 void init_shell();
 
 

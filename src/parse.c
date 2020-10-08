@@ -1,17 +1,29 @@
 #include "parse.h"
 
-
+/**
+ * Given an input string with all valid characters
+ * and with length 0 < input <= MAX_INPUT_LEN
+ * returns a pointer to a command_type structure
+ * containing the parsed tokens in the **tokens field
+ * and parses all file redirections to put the
+ * appropiate FILE descriptor pointers in the
+ * io field array of the command_type struct.
+ *
+ * If there was a syntax error, the STATUS flag
+ * is set accordingly and a NULL pointer is returned
+ * instead.
+ */
 command_type *parse_command(char *input) {
     command_type *command = malloc(sizeof(command_type));
     if (command == NULL) { /* malloc failed */
         perror("malloc");
         exit(1);
     }
-    /* Initialize io array as stdin/stdout by default */
-    command->io[0] = stdin;
-    command->io[1] = stdout;
+    /* Initialize command struct */
+    command->tokens = NULL;
+    init_command_io(command); /* io array as stdin/stdout by default */
 
-    size_t n_tokens = 0; /* Number of tokens that will
+    int n_tokens = 0; /* Number of tokens that will
                           * be allocated for the command_type struct;
                           * that is: </> and its following filenames
                           * will not add up to this count.
@@ -64,6 +76,17 @@ command_type *parse_command(char *input) {
 
     return command;
 }
+
+
+/**
+ * Clears all memmory allocated during the execution
+ * of parse_command, being command the pointer returned
+ * by such routine.
+ */
+void clear_command(command_type *command) {
+    clear_tokens(command->tokens);
+}
+
 
 
 /**
@@ -140,16 +163,17 @@ char *get_token(char **str) {
 
 /**
  * Clears all memmory allocated during the execution
- * of parse_tokens, being command the pointer returned
+ * of parse_tokens, being tokens the pointer stored in
+ * the field of the command_type pointer returned
  * by such routine.
  */
-void clear_tokens(char **command) {
+void clear_tokens(char **tokens) {
     /* Free all the strings in the array */
-    for (char **str_ptr = command; *str_ptr != NULL; str_ptr++) {
+    for (char **str_ptr = tokens; *str_ptr != NULL; str_ptr++) {
         free(*str_ptr);
     }
     /* Free allocated memory to hold the array of pointers */
-    free(command);
+    free(tokens);
 }
 
 
@@ -158,19 +182,10 @@ void clear_tokens(char **command) {
 #if DEBUG
 
 int main(int argc, char *argv[]) {
-    if (argc > 2) {
-        fprintf(stderr, "usage: %s <string>", argv[0]);
-        exit(1);
-    }
-
-    char *input = strdup(argv[1]);
-
-    command_type *command = parse_command(input);
-    char **tokens = command->tokens;
-    while(*tokens != NULL) {
-        printf("%s\n", *tokens);
-        tokens++;
-    }
+    command_type *command1 = parse_command("echo 3");
+    command_type *command2 = parse_command("cat grep");
+    command2->io[0] = stderr;
+    printf("%p, %p\n", command1->io[0], command2->io[0]);
 
     return 0;
 }
