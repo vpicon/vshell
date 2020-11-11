@@ -8,5 +8,7 @@ The shell emulates a standard Unix terminal, with notations for
 redirections as < or > (input and output, respectively). Pipelines
 are indicated with a | between commands. 
 
+An animated demo shows its simple features:
+![vshell demo](demo.gif)
 
 
