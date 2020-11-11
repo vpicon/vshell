@@ -114,7 +114,7 @@ MunitResult test_get_token_multiple_tokens(
  */
 void test_parse_command_tear_down(
         void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     clear_tokens(command->tokens);
 }
 
@@ -129,7 +129,7 @@ void* test_parse_command_single_token_setup(
 
 MunitResult test_parse_command_single_token(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     munit_assert_string_equal("cat", command->tokens[0]);
 
     return MUNIT_OK;
@@ -145,7 +145,7 @@ void* test_parse_command_multiple_tokens_no_io_setup(
 
 MunitResult test_parse_command_multiple_tokens_no_io(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     munit_assert_string_equal("echo", command->tokens[0]);
     munit_assert_string_equal("hello", command->tokens[1]);
 
@@ -162,7 +162,7 @@ void* test_parse_command_multiple_tokens_with_io_setup(
 
 MunitResult test_parse_command_multiple_tokens_with_io(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     munit_assert_string_equal("echo", command->tokens[0]);
     munit_assert_string_equal("hello", command->tokens[1]);
     munit_assert_null(command->tokens[2]);
@@ -180,7 +180,7 @@ void* test_parse_command_io_redirection_syntax_error_setup(
 
 MunitResult test_parse_command_io_redirection_syntax_error(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     munit_assert_null(command);
 
     return MUNIT_OK;
@@ -196,7 +196,7 @@ void* test_parse_command_no_pipeline_setup(
 
 MunitResult test_parse_command_no_pipeline(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *command = (command_type *) fixture;
+    command_t *command = (command_t *) fixture;
     munit_assert_null(command->next_command);
 
     return MUNIT_OK;
@@ -212,8 +212,8 @@ void* test_parse_command_single_pipeline_setup(
 
 MunitResult test_parse_command_single_pipeline(
         const MunitParameter params[] MUNIT_UNUSED, void* fixture) {
-    command_type *first_command = (command_type *) fixture;
-    command_type *second_command = first_command->next_command;
+    command_t *first_command = (command_t *) fixture;
+    command_t *second_command = first_command->next_command;
 
     munit_assert_string_equal("echo", first_command->tokens[0]);
     munit_assert_string_equal("grep", second_command->tokens[0]);

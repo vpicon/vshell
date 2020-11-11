@@ -1,6 +1,21 @@
-#include "vshell.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#include "defs.h"
+#include "io.h"
+#include "parse.h"
 
 
+/* Global Data */
+
+struct shell_status STATUS;
+
+
+/* Routines */
 
 /**
  * Initialize all shell global variables and
@@ -18,7 +33,7 @@ void init_shell() {
 
 /**
  * Reads input of the command line and returns a
- * pointer to a command_type structure containing the
+ * pointer to a command_t structure containing the
  * parsed command input.
  * On an empty input, the function returns the NULL pointer.
  * If en EOF character is found, the function sets the run
@@ -31,7 +46,7 @@ void init_shell() {
  * set to 1.
  * On any error, the function returns a NULL pointer.
  */
-command_type *read_input() {
+command_t *read_input() {
     STATUS.input = 0;
     /* Read line of input and store it in pointer */
     char *line = NULL;
@@ -58,7 +73,7 @@ command_type *read_input() {
         i++;
     }
 
-    command_type *command = NULL;
+    command_t *command = NULL;
     if(STATUS.input != 2) {
         if (i > MAX_INPUT_LEN) { /* line is longer than SHELL input buffer */
             STATUS.input = 1;
@@ -89,7 +104,7 @@ command_type *read_input() {
  * Assume command_name is a null terminated
  * non empty character array.
  */
-int special_command(command_type *command) {
+int special_command(command_t *command) {
     char *command_name = command->tokens[0];
     if (strcmp(command_name, "exit") == 0) {
         return 1;
@@ -100,13 +115,13 @@ int special_command(command_type *command) {
 }
 
 /**
- * Given a command_type struct pointer and a
+ * Given a command_t struct pointer and a
  * pipe of filedescriptors (returned by pipe(2))
  * prepares the command input/output and
  * executes the command via a system call to
  * exec(2).
  */
-void exec_command(command_type *command, int pipe_fd[]) {
+void exec_command(command_t *command, int pipe_fd[]) {
     char *command_name = command->tokens[0];
     close(pipe_fd[IN]);
     if (command->next_command != NULL) {
@@ -140,7 +155,7 @@ int main() {
         fflush(stdout);
 
         /* Read input and skip to next command if there were any errors */
-        command_type *command = read_input();
+        command_t *command = read_input();
         if (STATUS.input != 0) {  /* Error on input */
             /* No need to free any memmory, since
              * on input error all memmory in already freed.
@@ -157,8 +172,8 @@ int main() {
                 clear_command_tokens(command);
                 clear_command_io(command);
                 continue;
-            } else { // special_command_flag == 2
-                // history;
+            } else { /* special_command_flag == 2 */
+                /* history; */
             }
         }
 

@@ -1,25 +1,31 @@
 #include "io.h"
 
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+
 /**
- * Given a pointer to a new allocated command_type
+ * Given a pointer to a new allocated command_t
  * structure, sets the io field array to the
  * standard input and output file descriptors.
  */
-void init_command_io(command_type *command) {
+void init_command_io(command_t *command) {
     command->io[0] = STDIN_FILENO;
     command->io[1] = STDOUT_FILENO;
 }
 
 
 /**
- * Given a pointer to a command_type structure,
+ * Given a pointer to a command_t structure,
  * a nulterminated array character representing a file with
- * name filename in the current directory, and an io_type enum t
+ * name filename in the current directory, and an io_t enum t
  * (IN/OUT); opens such file in with the given mode t, and
  * adds the opened file to the io field of the given command.
  */
-void set_command_io(command_type *command,
-                    char *const filename, enum io_type t) {
+void set_command_io(command_t *command,
+                    char *const filename, enum io_t t) {
     int fd; /* opened file descriptor */
     if (t == IN) {
         int flags = O_RDONLY;
@@ -40,12 +46,12 @@ void set_command_io(command_type *command,
 
 
 /**
- * Given a pointer to a command_type structure,
+ * Given a pointer to a command_t structure,
  * closes any open file descriptor that such command
  * has stored in its io array field (if those are
  * different form standard io file descriptors).
  */
-void clear_command_io(command_type *command) {
+void clear_command_io(command_t *command) {
     int fd_in = command->io[IN];
     if (fd_in != STDIN_FILENO)
         close(fd_in);

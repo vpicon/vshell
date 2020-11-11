@@ -55,22 +55,23 @@ struct shell_status {
 
     char *msg;
 };
-struct shell_status STATUS;
+
+extern struct shell_status STATUS;
 
 
 /*** TYPES ***/
 
-typedef struct command_type {
+typedef struct command_struct {
     char **tokens;  /* null-terminated array of pointers to strings */
     int n_tokens;   /* number of (non NULL) tokens in the tokens array */
     int io[2];      /* array of file descriptors represents input and 
                      * output streams of the command */
-    struct command_type *next_command;  /* Pointer to the next command in 
+    struct command_struct *next_command;  /* Pointer to the next command in 
                                     a pipe (if any), otherwise NULL */
-} command_type;
+} command_t;
 
 
-enum io_type {
+enum io_t {
     IN = 0, 
     OUT
 };

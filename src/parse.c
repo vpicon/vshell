@@ -1,5 +1,12 @@
 #include "parse.h"
 
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "io.h"
+
 
 /**
  * Given an input string with all valid characters
@@ -7,11 +14,11 @@
  * such that the string represents a compound command
  * created by pipelining commands one next to the other,
  * the function returns a pointer to the first node of a
- * linked list of command_type structures
+ * linked list of command_t structures
  * containing the parsed tokens in the **tokens field
  * and parsing all file redirections to put the
  * appropiate FILE descriptor pointers in the
- * io field array of eacho command_type node.
+ * io field array of eacho command_t node.
  * The given list of commands allocates memmory for each
  * pointer and for each array of tokens which must be
  * freed via a free(2) call.
@@ -20,8 +27,8 @@
  * is set accordingly and a NULL pointer is returned
  * instead.
  */
-command_type *parse_command(char *input) {
-    command_type *command = malloc(sizeof(command_type));
+command_t *parse_command(char *input) {
+    command_t *command = malloc(sizeof(command_t));
     if (command == NULL) { /* malloc failed */
         perror("malloc");
         exit(1);
@@ -32,7 +39,7 @@ command_type *parse_command(char *input) {
      * long list of piped commands), which will be returned by the
      * function.
      */
-    command_type *first_command = command;
+    command_t *first_command = command;
 
     char *token;
     while ((token = get_token(&input)) != NULL) {
@@ -41,7 +48,7 @@ command_type *parse_command(char *input) {
             add_command_token(command, NULL);
 
             /* Create a new command struct */
-            command_type *new_command = malloc(sizeof(command_type));
+            command_t *new_command = malloc(sizeof(command_t));
             if (new_command == NULL) { /* malloc failed */
                 perror("malloc");
                 exit(1);
@@ -71,7 +78,7 @@ command_type *parse_command(char *input) {
                 clear_command_io(command);
                 return NULL;
             }
-            enum io_type t = (strcmp(token, "<") == 0) ? IN : OUT;
+            enum io_t t = (strcmp(token, "<") == 0) ? IN : OUT;
             set_command_io(command, filename, t);
         } else {
             add_command_token(command, token);
@@ -126,10 +133,10 @@ char *get_token(char **str) {
 
 
 /**
- * Given a pointer to a new freshly allocated command_type
+ * Given a pointer to a new freshly allocated command_t
  * struct, initializes its struct fields accordingly.
  */
-void init_command(command_type *command) {
+void init_command(command_t *command) {
     command->tokens = NULL;
     command->n_tokens = 0;
     init_command_io(command); /* io array as stdin/stdout by default */
@@ -138,14 +145,14 @@ void init_command(command_type *command) {
 
 
 /**
- * Given a pointer to a command_type structure and a
+ * Given a pointer to a command_t structure and a
  * nul-terminated array of characters, allocates memmory
  * to add the given token to the end of the tokens array field
  * in the given command structure.
  * The function also increments the number of tokens accounted
  * by the command structure, if the given token is not NULL.
  */
-void add_command_token(command_type *command, char* token) {
+void add_command_token(command_t *command, char* token) {
     command->tokens = realloc(command->tokens,
                               (command->n_tokens + 1) * sizeof(char*));
     if (command->tokens == NULL) { /* realloc failed */
@@ -161,9 +168,9 @@ void add_command_token(command_type *command, char* token) {
 
 /**
  * Clears all memmory allocated for the array of tokens of a given
- * command_type structure.
+ * command_t structure.
  */
-void clear_command_tokens(command_type *command) {
+void clear_command_tokens(command_t *command) {
     clear_tokens(command->tokens);
 }
 
@@ -189,7 +196,7 @@ void clear_tokens(char **tokens) {
 #if DEBUG
 
 int main(int argc, char *argv[]) {
-    command_type *command2 = parse_command("cat grep");
+    command_t *command2 = parse_command("cat grep");
     command2->io[0] = stderr;
     printf("%p, %p\n", command1->io[0], command2->io[0]);
 

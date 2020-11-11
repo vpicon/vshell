@@ -25,10 +25,14 @@ $(TEST_TARGET): $(TEST_SOURCES) $(TEST_LIB_OBJECTS) \
 		$(TEST_SOURCES) $(filter-out src/vshell.o,$(OBJECTS))
 
 clean:
-	-rm $(OBJECTS) $(TEST_OBJECTS) test
+	-rm $(OBJECTS) $(TEST_OBJECTS) 
+
+cleanall: clean
+	-rm  $(TARGET) $(TEST_TARGET)
+
 
 %.o: %.c $(HEADERS) 
 	$(CC) $(CFLAGS) -I"src" -c -o $@ $<
 
-.PHONY : all test clean
+.PHONY : all test clean cleanall
 

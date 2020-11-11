@@ -1,6 +1,10 @@
 #include "test.h"
 
 
+/* Global symbols */
+ struct shell_status STATUS;
+
+
 int main(int argc, char* const argv[]) {
     int suites_failed = 0;
 
